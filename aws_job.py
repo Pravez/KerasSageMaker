@@ -10,10 +10,10 @@ sagemaker_session = sagemaker.Session()
 if ON_SAGEMAKER_NOTEBOOK:
     role = sagemaker.get_execution_role()
 else:
-    role = "[The ARN of your role]"
+    role = "[YOUR ROLE]"
 
 
-bucket = "sagemaker-tests"
+bucket = "cats-n-dogs"
 key = "data"
 key_output = "output"                   # Path from the bucket's root to the dataset
 train_instance_type='ml.p2.xlarge'      # The type of EC2 instance which will be used for training
@@ -37,14 +37,16 @@ estimator = TensorFlow(
   train_instance_type=train_instance_type,
 )
 
+print("Training ...")
 estimator.fit({'training': train_input_path, 'eval': validation_input_path})
 
+print("Deploying ...")
 predictor = estimator.deploy(initial_instance_count=1, instance_type=deploy_instance_type)
 
+print("Predictor endpoint name : %s" % predictor.endpoint)
 
-cat_image = load_img("[YOUR_FOLDER]/cat/2282.jpg", target_size=(128, 128))
-cat_image_array = np.array(cat_image).reshape((1, 128, 128))
+print("Testing endpoint ...")
+cat_image = load_img("./tmp/PetImages/Cat/2282.jpg", target_size=(128, 128))
+cat_image_array = np.array(cat_image).reshape((1, 128, 128, 3))
 
 print(predictor.predict({'inputs_input': cat_image_array}))
-
-sagemaker.Session().delete_endpoint(predictor.endpoint)
